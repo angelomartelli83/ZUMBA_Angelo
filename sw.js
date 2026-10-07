@@ -1,4 +1,4 @@
-const CACHE_NAME='zumba-angelo-v1';
+const CACHE_NAME='zumba-angelo-v2';
 const BASE='/ZUMBA_Angelo/';
 const APP_SHELL=[BASE,BASE+'index.html',BASE+'manifest.json',BASE+'icon-192.png',BASE+'icon-512.png',BASE+'apple-touch-icon.png',BASE+'css/style.css',BASE+'js/pwa.js'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(APP_SHELL)).then(()=>self.skipWaiting())));
