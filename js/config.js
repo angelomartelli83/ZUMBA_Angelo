@@ -1,6 +1,6 @@
 // Configurazione Supabase - versione stabile
-const SUPABASE_URL = "https://aatelpatdppxdehbsxmz.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_dA9nfW05M1BFCdjRwkWRMA_XM_SxPuV";
+const SUPABASE_URL = "https://jhswbcsyegiwzknqojik.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_7UkJDARVRVg4v3RLbaL8Wg_wVYGq91F";
 
 if (!window.supabase || typeof window.supabase.createClient !== "function") {
     console.error("SDK Supabase non disponibile.");
