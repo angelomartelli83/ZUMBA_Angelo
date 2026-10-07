@@ -70,7 +70,7 @@ function renderStudentProfile(profile) {
     const welcomeEl = document.getElementById('student-welcome');
     const certStatusEl = document.getElementById('student-cert-status');
     if (welcomeEl) {
-        welcomeEl.innerText = `Ciao, ${profile.nome || 'Allieva'}!`;
+        welcomeEl.innerText = `Ciao, ${profile.nome || 'Allieva/o'}!`;
     }
 
     if (certStatusEl) {
