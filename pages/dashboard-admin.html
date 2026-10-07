@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="it" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZUMBA con Angelo | Pannello Istruttore</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 
+                            lime: '#CCFF00', 
+                            cyan: '#00E5FF', 
+                            pink: '#FF007F', 
+                            dark: '#0B0F19', 
+                            card: '#131927', 
+                            border: '#202A40' 
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Librerie Esterne -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-brand-dark text-gray-100 font-sans min-h-screen flex flex-col antialiased">
+
+    <!-- NAVBAR -->
+    <nav class="sticky top-0 z-40 glass-panel border-b border-brand-border">
+        <div class="max-w-7xl mx-auto px-4 py-3.5 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl btn-gradient flex items-center justify-center">
+                    <i class="fa-solid fa-bolt text-black text-xl"></i>
+                </div>
+                <span class="text-xl font-black uppercase text-white">ZUMBA <span class="fitness-text-gradient">con Angelo</span></span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <!-- Dropdown Campanella Notifiche -->
+                <div class="relative">
+                    <button id="btn-notifications" class="relative p-2.5 bg-brand-dark border border-brand-border rounded-xl text-gray-300 hover:text-white transition focus:outline-none" aria-label="Notifiche">
+                        <i class="fa-solid fa-bell text-lg"></i>
+                        <span id="notif-badge" class="hidden absolute -top-1 -right-1 bg-brand-pink text-white text-[10px] font-black min-w-5 h-5 px-1 rounded-full flex items-center justify-center border-2 border-brand-dark">0</span>
+                    </button>
+                    <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-brand-dark border border-brand-border rounded-2xl shadow-2xl z-50 p-4 space-y-3">
+                        <div class="flex justify-between items-center border-b border-brand-border pb-2">
+                            <h4 class="text-xs font-black uppercase text-white tracking-wider">
+                                <i class="fa-solid fa-bell text-brand-cyan mr-1"></i> Notifiche
+                            </h4>
+                            <div class="flex items-center gap-3">
+                                <button onclick="markAllNotificationsAsRead()" class="text-[10px] font-bold text-brand-cyan hover:underline">
+                                    Segna tutte come lette
+                                </button>
+                                <button onclick="clearReadNotifications()" class="text-[10px] font-bold text-brand-pink hover:underline">
+                                    Pulisci lette
+                                </button>
+                            </div>
+                        </div>
+                        <div id="notif-list-container" class="max-h-64 overflow-y-auto space-y-2 pr-1">
+                            <p class="text-xs text-gray-500 text-center py-4">Caricamento notifiche...</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="nav-links" class="flex items-center space-x-3"></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN DASHBOARD -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 space-y-8">
+        
+        <!-- INTESTAZIONE BENVENUTO ISTRUTTORE -->
+        <div class="glass-panel p-6 rounded-3xl flex justify-between items-center border-l-4 border-l-brand-cyan">
+            <div>
+                <h2 id="instructor-welcome-title" class="text-2xl font-black uppercase text-white">Pannello Istruttore</h2>
+                <p class="text-xs text-gray-400">Analisi e gestione dei corsi e delle allieve</p>
+            </div>
+        </div>
+
+        <!-- PROFILO / AVATAR ISTRUTTORE
+             Temporaneamente nascosto: funzione avatar da ripristinare in seguito. -->
+
+        <!-- LISTA LEZIONI E ISCRITTI CON PULSANTE PER CREARE LEZIONE -->
+        <div class="glass-panel p-6 rounded-3xl space-y-4">
+            <div class="flex flex-wrap justify-between items-center gap-3 border-b border-brand-border pb-4">
+                <h3 class="text-lg font-black uppercase text-white flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-brand-cyan"></i> Programmazione Lezioni &amp; Eventi
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                    <button id="btn-open-create-modal" class="px-4 py-2.5 btn-gradient text-black font-black uppercase text-xs rounded-xl shadow-lg hover:opacity-90 transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus text-sm"></i> Nuova Lezione
+                    </button>
+                    <button id="btn-open-create-event-modal" type="button" class="px-4 py-2.5 bg-brand-pink text-white font-black uppercase text-xs rounded-xl shadow-lg hover:opacity-90 transition flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-plus text-sm"></i> Nuovo Evento
+                    </button>
+                </div>
+            </div>
+            
+            <div id="admin-lessons-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Popolato da admin.js -->
+            </div>
+            <div class="mt-5 pt-5 border-t border-brand-border">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <h4 class="text-sm font-black uppercase text-white flex items-center gap-2"><i class="fa-solid fa-calendar-days text-brand-pink"></i> Eventi organizzati</h4>
+                    <span class="text-[10px] text-gray-500">Eventi, iscrizioni e gestione</span>
+                </div>
+                <div id="admin-events-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"><p class="text-xs text-gray-500 italic">Caricamento eventi...</p></div>
+            </div>
+        </div>
+        <!-- PLAYLIST DELLE LEZIONI -->
+        <div class="glass-panel p-6 rounded-3xl space-y-4 border-l-4 border-l-brand-cyan">
+            <div class="border-b border-brand-border pb-4">
+                <h3 class="text-lg font-black uppercase text-white flex items-center gap-2">
+                    <i class="fa-solid fa-music text-brand-cyan"></i> Playlist delle lezioni
+                </h3>
+                <p class="text-xs text-gray-500 mt-1">Crea una playlist testuale direttamente qui oppure carica un file audio/M3U/TXT/ZIP.</p>
+            </div>
+            <form id="form-upload-playlist" class="space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div><label for="playlist-lesson-id" class="block text-xs font-bold text-gray-400 uppercase mb-1">Lezione</label><select id="playlist-lesson-id" required class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"><option value="">-- Seleziona --</option></select></div>
+        <div><label for="playlist-type" class="block text-xs font-bold text-gray-400 uppercase mb-1">Tipo</label><select id="playlist-type" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"><option value="text">Playlist testuale</option><option value="file">File</option></select></div>
+        <div><label for="playlist-title" class="block text-xs font-bold text-gray-400 uppercase mb-1">Nome Playlist</label><input id="playlist-title" type="text" required placeholder="Es. Zumba Monday Mix" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"></div>
+    </div>
+    <div id="playlist-builder-field" class="space-y-3">
+        <div class="flex flex-wrap justify-between items-center gap-2"><div><label class="block text-xs font-bold text-gray-400 uppercase">Brani</label><p class="text-[10px] text-gray-500">Inserisci manualmente, importa un TXT oppure fotografa una lista.</p></div><div class="flex flex-wrap gap-2"><button id="btn-import-playlist-txt" type="button" class="px-3 py-2 bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan rounded-xl text-[10px] font-black uppercase"><i class="fa-solid fa-file-lines mr-1"></i> Importa TXT</button><button id="btn-import-playlist-photo" type="button" class="px-3 py-2 bg-brand-lime/10 border border-brand-lime/30 text-brand-lime rounded-xl text-[10px] font-black uppercase"><i class="fa-solid fa-camera mr-1"></i> Foto lista</button><button id="btn-add-playlist-track" type="button" class="px-3 py-2 bg-white/5 border border-brand-border text-gray-300 rounded-xl text-[10px] font-black uppercase"><i class="fa-solid fa-plus mr-1"></i> Aggiungi</button></div></div><input id="playlist-txt-import" type="file" accept=".txt,text/plain" class="hidden"><input id="playlist-photo-import" type="file" accept="image/*" capture="environment" class="hidden"><div id="playlist-import-status" class="text-[10px] text-brand-cyan min-h-4"></div>
+        <div id="playlist-tracks" class="space-y-2"></div>
+    </div>
+    <div id="playlist-file-field" class="hidden"><label for="playlist-file" class="block text-xs font-bold text-gray-400 uppercase mb-1">File (max 50 MB)</label><input id="playlist-file" type="file" accept=".mp3,.wav,.m4a,.aac,.ogg,.m3u,.m3u8,.txt,.zip" class="w-full px-2 py-2 bg-brand-dark border border-brand-border rounded-xl text-white text-[10px]"></div>
+    <div class="flex justify-end"><button id="btn-upload-playlist" type="submit" class="btn-gradient text-black font-black px-5 py-2.5 rounded-xl text-xs uppercase"><i class="fa-solid fa-floppy-disk"></i> Salva Playlist</button></div>
+</form>            <div id="admin-playlists-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <p class="text-xs text-gray-500 italic">Caricamento playlist...</p>
+            </div>
+        </div>
+
+        <!-- TABELLA ALLIEVE -->
+        <div class="glass-panel p-6 rounded-3xl">
+            <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+                <h3 class="text-lg font-black uppercase text-white">Anagrafica Allieve</h3>
+                <button type="button" id="btn-birthdays-today" onclick="openBirthdaysModal()" class="px-3 py-2 bg-brand-pink/10 hover:bg-brand-pink hover:text-white text-brand-pink border border-brand-pink/40 rounded-xl text-[10px] font-black uppercase transition flex items-center gap-2">
+                    <i class="fa-solid fa-cake-candles"></i> Compleanni di oggi
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-brand-border text-xs font-bold text-gray-400 uppercase">
+                            <th class="py-3 px-2">Foto</th>
+                            <th class="py-3 px-2">Allieva</th>
+                            <th class="py-3 px-2">Contatti</th>
+                            <th class="py-3 px-2">Data di nascita</th>
+                            <th class="py-3 px-2">Scadenza Cert.</th>
+                            <th class="py-3 px-2">Documento</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-students-body" class="divide-y divide-brand-border text-sm">
+                        <!-- Popolato da admin.js -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CHAT COMMUNITY & PRIVATA -->
+        <div class="glass-panel p-6 rounded-3xl space-y-4">
+            <div class="flex justify-between items-center border-b border-brand-border pb-3">
+                <h3 class="text-lg font-black uppercase text-white flex items-center gap-2">
+                    <i class="fa-solid fa-comments text-brand-cyan"></i> Community &amp; Chat
+                </h3>
+                <select id="chat-type-select" class="bg-brand-dark border border-brand-border text-white text-xs rounded-xl p-2 font-bold focus:outline-none focus:border-brand-cyan">
+                    <option value="group">📢 Chat di Gruppo</option>
+                    <option value="private">🔒 Messaggio Privato Istruttore</option>
+                </select>
+            </div>
+
+            <!-- SELETTORE ALLIEVA CHAT PRIVATA -->
+            <div id="student-selector-wrapper" class="hidden">
+                <label for="student-private-select" class="block text-xs font-bold text-gray-400 uppercase mb-1">Seleziona Allieva:</label>
+                <select id="student-private-select" class="w-full bg-brand-dark border border-brand-border text-white text-xs rounded-xl p-2.5 font-bold focus:outline-none focus:border-brand-cyan">
+                    <option value="">-- Seleziona un'allieva --</option>
+                </select>
+            </div>
+
+            <div id="chat-messages-container" class="h-64 overflow-y-auto space-y-3 p-3 bg-brand-dark/50 rounded-2xl border border-brand-border">
+                <!-- Messaggi popolati da chat.js -->
+            </div>
+
+            <form id="chat-form" class="flex gap-2">
+                <label for="chat-input" class="sr-only">Scrivi un messaggio</label>
+                <input type="text" id="chat-input" placeholder="Scrivi un messaggio..." required autocomplete="off"
+                    class="flex-grow bg-brand-dark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-cyan">
+                <button type="submit" class="btn-gradient text-black font-black px-5 py-2.5 rounded-xl text-xs uppercase hover:opacity-90 transition">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- STORICO PRESENZE -->
+        <div class="glass-panel p-6 rounded-3xl space-y-4 border-l-4 border-l-brand-lime">
+            <div class="flex flex-wrap justify-between items-center gap-3 border-b border-brand-border pb-3">
+                <div>
+                    <h3 class="text-lg font-black uppercase text-white flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-check text-brand-lime"></i> Storico Presenze
+                    </h3>
+                    <p class="text-[10px] text-gray-500 mt-1">Registro delle presenze confermate per ogni lezione, comprese partecipanti extra e new entry.</p>
+                </div>
+            </div>
+            <div id="attendance-history-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <p class="text-xs text-gray-500 italic">Caricamento storico...</p>
+            </div>
+        </div>
+
+        <!-- GRAFICI -->
+        <div class="glass-panel p-6 rounded-3xl border-l-4 border-l-brand-cyan">
+            <div class="flex flex-wrap justify-between items-center gap-3 border-b border-brand-border pb-4">
+                <div>
+                    <h3 class="text-lg font-black uppercase text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-brand-cyan"></i> GRAFICI
+                    </h3>
+                    <p class="text-[10px] text-gray-500 mt-1">Scegli quale analisi visualizzare.</p>
+                </div>
+                <select id="analytics-chart-select" class="bg-brand-dark border border-brand-border rounded-xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-brand-cyan">
+                    <option value="presenze">Presenze per sessione</option>
+                    <option value="certificati">Stato certificati medici</option>
+                </select>
+            </div>
+            <div class="mt-5 relative h-80 w-full flex justify-center">
+                <canvas id="chart-analytics"></canvas>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODALE PER MODIFICARE PLAYLIST -->
+    <div id="modal-edit-playlist" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card border border-brand-border p-6 rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-y-auto space-y-4 shadow-2xl relative">
+            <div class="flex justify-between items-center border-b border-brand-border pb-3">
+                <div>
+                    <h3 class="text-lg font-black uppercase text-white flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square text-brand-cyan"></i> Modifica Playlist
+                    </h3>
+                    <p id="edit-playlist-type-label" class="text-[10px] text-gray-500 mt-1 uppercase font-bold"></p>
+                </div>
+                <button id="btn-close-edit-playlist" type="button" class="text-gray-400 hover:text-white text-xl" aria-label="Chiudi">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="form-edit-playlist" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label for="edit-playlist-lesson-id" class="block text-xs font-bold text-gray-400 uppercase mb-1">Lezione</label>
+                        <select id="edit-playlist-lesson-id" required class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"></select>
+                    </div>
+                    <div>
+                        <label for="edit-playlist-title" class="block text-xs font-bold text-gray-400 uppercase mb-1">Nome Playlist</label>
+                        <input id="edit-playlist-title" type="text" required class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs">
+                    </div>
+                </div>
+                <div id="edit-playlist-file-notice" class="hidden bg-brand-dark/70 border border-brand-border rounded-xl p-3 text-[10px] text-gray-400"></div>
+                <div id="edit-playlist-builder" class="space-y-3">
+                    <div class="flex flex-wrap justify-between items-center gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase">Brani</label>
+                            <p class="text-[10px] text-gray-500">Modifica titolo, artista, link e ordine dei brani.</p>
+                        </div>
+                        <button id="btn-add-edit-playlist-track" type="button" class="px-3 py-2 bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan rounded-xl text-[10px] font-black uppercase">
+                            <i class="fa-solid fa-plus mr-1"></i> Aggiungi brano
+                        </button>
+                    </div>
+                    <div id="edit-playlist-tracks" class="space-y-2"></div>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button id="btn-cancel-edit-playlist" type="button" class="px-4 py-2.5 bg-brand-dark border border-brand-border text-gray-300 rounded-xl text-xs font-bold uppercase">Annulla</button>
+                    <button id="btn-save-edit-playlist" type="submit" class="btn-gradient text-black font-black px-5 py-2.5 rounded-xl text-xs uppercase">
+                        <i class="fa-solid fa-floppy-disk"></i> Salva Modifiche
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALE PER CREARE NUOVA LEZIONE -->
+    <div id="modal-create-lesson" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card border border-brand-border p-6 rounded-3xl max-w-lg w-full space-y-4 shadow-2xl relative">
+            <div class="flex justify-between items-center border-b border-brand-border pb-3">
+                <h3 class="text-lg font-black uppercase text-white flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-plus text-brand-lime"></i> Programma Nuova Lezione
+                </h3>
+                <button id="btn-close-modal" class="text-gray-400 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form id="form-create-lesson" class="space-y-4">
+                <div>
+                    <label for="lesson-title" class="block text-xs font-bold text-gray-400 uppercase mb-1">Titolo Lezione</label>
+                    <input type="text" id="lesson-title" placeholder="Es. Zumba Fitness / Toning" required 
+                        class="w-full px-4 py-3 bg-brand-dark border border-brand-border rounded-xl text-white text-sm focus:outline-none focus:border-brand-cyan">
+                </div>
+                <div>
+                    <label for="lesson-datetime" class="block text-xs font-bold text-gray-400 uppercase mb-1">Data e Ora Lezione</label>
+                    <input type="datetime-local" id="lesson-datetime" required 
+                        class="w-full px-4 py-3 bg-brand-dark border border-brand-border rounded-xl text-white text-sm focus:outline-none focus:border-brand-cyan">
+                </div>
+                <div>
+                    <label for="lesson-capacity" class="block text-xs font-bold text-gray-400 uppercase mb-1">Capienza Massima</label>
+                    <input type="number" id="lesson-capacity" value="20" min="1" required 
+                        class="w-full px-4 py-3 bg-brand-dark border border-brand-border rounded-xl text-white text-sm focus:outline-none focus:border-brand-cyan">
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" id="btn-cancel-modal" class="px-4 py-2.5 bg-brand-dark border border-brand-border text-gray-300 rounded-xl text-xs font-bold uppercase hover:bg-white/5 transition">
+                        Annulla
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 btn-gradient text-black font-black uppercase text-xs rounded-xl shadow-lg hover:opacity-90 transition">
+                        Pubblica Lezione
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALE PER MODIFICARE LEZIONE -->
+    <div id="modal-edit-lesson" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card border border-brand-border p-6 rounded-3xl max-w-lg w-full space-y-4 shadow-2xl relative">
+            <div class="flex justify-between items-center border-b border-brand-border pb-3">
+                <h3 class="text-lg font-black uppercase text-white flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-brand-cyan"></i> Modifica Lezione
+                </h3>
+                <button id="btn-close-edit-modal" class="text-gray-400 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form id="form-edit-lesson" class="space-y-4">
+                <input type="hidden" id="edit-lesson-id">
+                <div>
+                    <label for="edit-lesson-title" class="block text-xs font-bold text-gray-400 uppercase mb-1">Titolo Lezione</label>
+                    <input type="text" id="edit-lesson-title" required 
+                        class="w-full px-4 py-3 bg-brand-dark border border-brand-border rounded-xl text-white text-sm focus:outline-none focus:border-brand-cyan">
+                </div>
+                <div>
+                    <label for="edit-lesson-datetime" class="block text-xs font-bold text-gray-400 uppercase mb-1">Data e Ora Lezione</label>
+                    <input type="datetime-local" id="edit-lesson-datetime" required 
+                        class="w-full px-4 py-3 bg-brand-dark border border-brand-border rounded-xl text-white text-sm focus:outline-none focus:border-brand-cyan">
+                </div>
+                <div>
+                    <label for="edit-lesson-capacity" class="block text-xs font-bold text-gray-400 uppercase mb-1">Capienza Massima</label>
+                    <input type="number" id="edit-lesson-capacity" min="1" required 
+                        class="w-full px-4 py-3 bg-brand-dark border border-brand-border rounded-xl text-white text-sm focus:outline-none focus:border-brand-cyan">
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" id="btn-cancel-edit-modal" class="px-4 py-2.5 bg-brand-dark border border-brand-border text-gray-300 rounded-xl text-xs font-bold uppercase hover:bg-white/5 transition">
+                        Annulla
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 bg-brand-cyan text-black font-black uppercase text-xs rounded-xl shadow-lg hover:opacity-90 transition">
+                        Salva Modifiche
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALE COMPLEANNI -->
+    <div id="modal-birthdays" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card border border-brand-border p-6 rounded-3xl max-w-lg w-full max-h-[80vh] overflow-y-auto space-y-4 shadow-2xl relative">
+            <div class="flex justify-between items-center border-b border-brand-border pb-3">
+                <div>
+                    <h3 class="text-lg font-black uppercase text-white flex items-center gap-2">
+                        <i class="fa-solid fa-cake-candles text-brand-pink"></i> Compleanni di oggi
+                    </h3>
+                    <p id="birthdays-today-label" class="text-[10px] text-brand-cyan mt-1 font-bold"></p>
+                </div>
+                <button type="button" onclick="document.getElementById('modal-birthdays').classList.add('hidden')" class="text-gray-400 hover:text-white text-xl" aria-label="Chiudi">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="birthdays-list" class="space-y-2">
+                <p class="text-xs text-gray-500">Caricamento...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE CONFERMA PRESENZE -->
+    <div id="modal-attendance" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card border border-brand-border p-6 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-4 shadow-2xl relative">
+            <div class="flex justify-between items-center border-b border-brand-border pb-3">
+                <div>
+                    <h3 class="text-lg font-black uppercase text-white flex items-center gap-2">
+                        <i class="fa-solid fa-user-check text-brand-lime"></i> Conferma Presenze
+                    </h3>
+                    <p id="attendance-lesson-title" class="text-[10px] text-brand-cyan mt-1 font-bold"></p>
+                </div>
+                <button type="button" onclick="document.getElementById('modal-attendance').classList.add('hidden')" class="text-gray-400 hover:text-white text-xl" aria-label="Chiudi">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <input type="hidden" id="attendance-lesson-id">
+            <div id="attendance-list" class="space-y-3"></div>
+            <div class="flex justify-end gap-3 pt-2 border-t border-brand-border">
+                <button type="button" onclick="document.getElementById('modal-attendance').classList.add('hidden')" class="px-4 py-2.5 bg-brand-dark border border-brand-border text-gray-300 rounded-xl text-xs font-bold uppercase">
+                    Chiudi
+                </button>
+                <button type="button" onclick="saveAttendance()" class="px-5 py-2.5 btn-gradient text-black font-black uppercase text-xs rounded-xl">
+                    <i class="fa-solid fa-floppy-disk"></i> Salva Presenze
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT APPLICATION LOGIC -->
+
+    <div id="modal-create-event" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card border border-brand-pink/40 p-6 rounded-3xl max-w-2xl w-full space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-brand-border pb-3">
+                <h3 class="text-lg font-black uppercase text-white"><i class="fa-solid fa-calendar-plus text-brand-pink mr-2"></i>Nuovo Evento</h3>
+                <button id="btn-close-create-event" type="button" class="text-gray-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-create-event" class="space-y-4">
+                <input id="event-title" required placeholder="Nome evento" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Data e ora</label><input id="event-datetime" type="datetime-local" required class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"></div>
+                    <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Luogo</label><input id="event-location" placeholder="Es. Palestra comunale" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Indirizzo</label><input id="event-address" placeholder="Via, numero, città" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"></div>
+                    <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Copertina (URL)</label><input id="event-cover" type="url" placeholder="https://... (opzionale)" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"></div>
+                </div>
+                <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Oppure carica una foto</label><input id="event-cover-file" type="file" accept="image/*" class="w-full px-3 py-2 bg-brand-dark border border-brand-border rounded-xl text-white text-xs file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:font-bold file:bg-brand-pink file:text-white"></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Posti</label><input id="event-capacity" type="number" min="1" value="20" required class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"></div>
+                    <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Costo (€)</label><input id="event-price" type="number" min="0" step="0.01" value="0" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"></div>
+                    <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Stato</label><select id="event-status" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"><option value="open">Iscrizioni aperte</option><option value="draft">Bozza</option><option value="closed">Iscrizioni chiuse</option><option value="cancelled">Annullato</option></select></div>
+                </div>
+                <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Scadenza iscrizioni</label><input id="event-deadline" type="datetime-local" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"></div>
+                <textarea id="event-description" rows="5" placeholder="Descrizione dettagliata dell’evento (testo multilinea)" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"></textarea>
+                <div class="flex justify-end gap-2"><button type="button" id="btn-cancel-create-event" class="px-4 py-2.5 bg-brand-dark border border-brand-border text-gray-300 rounded-xl text-xs font-bold uppercase">Annulla</button><button type="submit" class="bg-brand-pink text-white font-black px-5 py-2.5 rounded-xl text-xs uppercase">Crea Evento</button></div>
+            </form>
+        </div>
+    </div>
+    <div id="modal-edit-event" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card border border-brand-cyan/40 p-6 rounded-3xl max-w-2xl w-full space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-brand-border pb-3">
+                <h3 class="text-lg font-black uppercase text-white"><i class="fa-solid fa-pen-to-square text-brand-cyan mr-2"></i>Modifica Evento</h3>
+                <button id="btn-close-edit-event" type="button" class="text-gray-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-edit-event" class="space-y-4">
+                <input type="hidden" id="edit-event-id">
+                <input id="edit-event-title" required placeholder="Nome evento" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3"><div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Data e ora</label><input id="edit-event-datetime" type="datetime-local" required class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"></div><div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Luogo</label><input id="edit-event-location" placeholder="Luogo" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"></div></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3"><input id="edit-event-address" placeholder="Indirizzo" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"><input id="edit-event-cover" type="url" placeholder="URL copertina" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"></div>
+                <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Sostituisci copertina con una foto</label><input id="edit-event-cover-file" type="file" accept="image/*" class="w-full px-3 py-2 bg-brand-dark border border-brand-border rounded-xl text-white text-xs file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-brand-cyan file:text-black file:font-bold"></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3"><input id="edit-event-capacity" type="number" min="1" required placeholder="Posti" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"><input id="edit-event-price" type="number" min="0" step="0.01" required placeholder="Costo (€)" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"><select id="edit-event-status" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"><option value="open">Iscrizioni aperte</option><option value="draft">Bozza</option><option value="closed">Iscrizioni chiuse</option><option value="cancelled">Annullato</option></select></div>
+                <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Scadenza iscrizioni</label><input id="edit-event-deadline" type="datetime-local" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"></div>
+                <textarea id="edit-event-description" rows="5" placeholder="Descrizione dettagliata" class="w-full px-3 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-white text-xs"></textarea>
+                <div class="flex justify-end gap-2"><button type="button" id="btn-cancel-edit-event" class="px-4 py-2.5 bg-brand-dark border border-brand-border text-gray-300 rounded-xl text-xs font-bold uppercase">Annulla</button><button type="submit" class="btn-gradient text-black font-black px-5 py-2.5 rounded-xl text-xs uppercase">Salva Modifiche</button></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/notifications.js"></script>
+    <script src="../js/chat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="../js/playlists.js"></script>
+    <script src="../js/admin.js"></script>
+    <script src="../js/attendance.js"></script>
+    <script src="../js/events.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const { data } = await getSupabase().auth.getSession();
+                const session = data?.session;
+                if (session?.user?.id) initPlaylistEditModal(session.user.id);
+            } catch (error) {
+                console.error('Errore inizializzazione modifica playlist:', error);
+            }
+        });
+    </script>
+</body>
+</html>

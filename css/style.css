@@ -1,0 +1,64 @@
+/* Gradienti e stili personalizzati ZUMBA con Angelo */
+.fitness-gradient { 
+    background: linear-gradient(135deg, #CCFF00 0%, #00E5FF 50%, #FF007F 100%); 
+}
+
+.btn-gradient { 
+    background: linear-gradient(135deg, #CCFF00 0%, #00E5FF 100%); 
+}
+
+.fitness-text-gradient {
+    background: linear-gradient(135deg, #CCFF00 0%, #00E5FF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.glass-panel {
+    background: rgba(19, 25, 39, 0.8);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Immagine personale di sfondo: grande, centrale e discreta, senza modificare la palette del sito */
+body {
+    position: relative;
+    isolation: isolate;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    z-index: -2;
+    pointer-events: none;
+    width: min(92vw, 1320px);
+    height: min(92vh, 940px);
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: url('../assets/angelo-sticker.png') center / contain no-repeat;
+    opacity: 0.22;
+    filter: saturate(0.9) contrast(0.94);
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 50%, rgba(11, 15, 25, 0.05), rgba(11, 15, 25, 0.32) 72%),
+        linear-gradient(90deg, rgba(11, 15, 25, 0.22) 0%, rgba(11, 15, 25, 0.02) 50%, rgba(11, 15, 25, 0.22) 100%);
+}
+
+@media (max-width: 768px) {
+    body::before {
+        width: 125vw;
+        height: 80vh;
+        left: 50%;
+        top: 52%;
+        transform: translate(-50%, -50%);
+        opacity: 0.16;
+    }
+}
