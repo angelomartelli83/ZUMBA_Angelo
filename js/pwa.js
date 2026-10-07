@@ -1,44 +1,24 @@
-let deferredPrompt;
-
-const isIos = () => {
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    return /iphone|ipad|ipod/.test(userAgent);
-};
-
-const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    const banner = document.getElementById('pwa-install-banner');
-    if (banner) banner.classList.remove('hidden');
+let deferredPrompt = null;
+const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isInStandaloneMode = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+function dismissPwaBanner(){ document.getElementById('pwa-install-banner')?.classList.add('hidden'); }
+function dismissIosBanner(){ document.getElementById('ios-install-banner')?.classList.add('hidden'); }
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  deferredPrompt = event;
+  document.getElementById('pwa-install-banner')?.classList.remove('hidden');
 });
-
+window.addEventListener('appinstalled', () => { deferredPrompt = null; dismissPwaBanner(); });
 document.addEventListener('DOMContentLoaded', () => {
-    const installBtn = document.getElementById('pwa-install-btn');
-    if (installBtn) {
-        installBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                await deferredPrompt.userChoice;
-                deferredPrompt = null;
-                dismissPwaBanner();
-            }
-        });
-    }
-
-    if (isIos() && !isInStandaloneMode()) {
-        const iosBanner = document.getElementById('ios-install-banner');
-        if (iosBanner) iosBanner.classList.remove('hidden');
-    }
+  document.getElementById('pwa-install-btn')?.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    dismissPwaBanner();
+  });
+  if (isIos() && !isInStandaloneMode()) document.getElementById('ios-install-banner')?.classList.remove('hidden');
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/ZUMBA_Angelo/sw.js', {scope:'/ZUMBA_Angelo/'}).catch(console.error));
+  }
 });
-
-function dismissPwaBanner() {
-    const banner = document.getElementById('pwa-install-banner');
-    if (banner) banner.classList.add('hidden');
-}
-
-function dismissIosBanner() {
-    const banner = document.getElementById('ios-install-banner');
-    if (banner) banner.classList.add('hidden');
-}
