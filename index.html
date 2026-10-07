@@ -11,7 +11,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Zumba Angelo">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2964/2964514.png">
+    <link rel="manifest" href="/ZUMBA_Angelo/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/ZUMBA_Angelo/icon-192.png">
+    <link rel="apple-touch-icon" href="/ZUMBA_Angelo/apple-touch-icon.png">
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -121,6 +123,20 @@
 
     </main>
 
+
+    <!-- PWA INSTALL BANNERS -->
+    <div id="pwa-install-banner" class="hidden fixed bottom-4 left-4 right-4 z-50 max-w-md mx-auto glass-panel p-4 rounded-2xl shadow-2xl">
+        <div class="flex items-center gap-3">
+            <img src="/ZUMBA_Angelo/icon-192.png" alt="" class="w-12 h-12 rounded-xl">
+            <div class="flex-1"><p class="font-black text-white text-sm">Installa ZUMBA con Angelo</p><p class="text-xs text-gray-400">Aggiungi l'app alla schermata Home.</p></div>
+            <button id="pwa-install-btn" class="px-4 py-2 rounded-xl btn-gradient text-black text-xs font-black uppercase">Installa</button>
+        </div>
+        <button onclick="dismissPwaBanner()" class="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-brand-dark border border-brand-border text-gray-300">×</button>
+    </div>
+    <div id="ios-install-banner" class="hidden fixed bottom-4 left-4 right-4 z-50 max-w-md mx-auto glass-panel p-4 rounded-2xl shadow-2xl">
+        <div class="flex items-start gap-3"><img src="/ZUMBA_Angelo/icon-192.png" alt="" class="w-10 h-10 rounded-xl"><div class="flex-1"><p class="font-black text-white text-sm">Installa ZUMBA con Angelo</p><p class="text-xs text-gray-300 mt-1">Su iPhone/iPad: tocca <b>Condividi</b> → <b>Aggiungi alla schermata Home</b> → <b>Aggiungi</b>.</p></div><button onclick="dismissIosBanner()" class="text-gray-400 text-xl">×</button></div>
+    </div>
+
     <!-- FOOTER -->
     <footer class="py-4 text-center text-xs text-gray-500 border-t border-brand-border">
         &copy; ZUMBA con Angelo. Tutti i diritti riservati by Angelo Martelli.
@@ -129,5 +145,6 @@
     <!-- JS SCRIPTS -->
     <script src="js/config.js?v=20261007"></script>
     <script src="js/auth.js?v=20261007"></script>
+    <script src="js/pwa.js?v=20261007"></script>
 </body>
 </html>
