@@ -249,67 +249,108 @@ function checkCertificateStatus(profile) {
 // Inizializza Evento Submit del Form
 function initCertUploadForm(user) {
     const form = document.getElementById('form-upload-cert');
-    if (!form) return;
+    if (!form || !user?.id) return;
 
-    form.onsubmit = async (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
+
         const fileInput = document.getElementById('cert-file-input');
         const expInput = document.getElementById('cert-expiration-date');
         const btn = document.getElementById('btn-upload-cert');
 
-        if (!fileInput.files || fileInput.files.length === 0) {
+        if (!fileInput?.files?.length) {
             alert("Seleziona un file da caricare.");
             return;
         }
 
-        if (!expInput.value) {
+        if (!expInput?.value) {
             alert("Inserisci la data di scadenza del certificato.");
             return;
         }
 
         const file = fileInput.files[0];
-        const fileExt = file.name.split('.').pop();
-        const filePath = `${user.id}/certificato_${Date.now()}.${fileExt}`;
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+        const maxSize = 10 * 1024 * 1024;
 
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Caricamento in corso...`;
+        if (!allowedTypes.includes(file.type)) {
+            alert("Formato non supportato. Carica un PDF, JPG, PNG o WEBP.");
+            return;
+        }
+
+        if (file.size > maxSize) {
+            alert("Il file è troppo grande. Il limite è di 10 MB.");
+            return;
+        }
+
+        const safeExt = (file.name.split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const filePath = user.id + '/certificato_' + Date.now() + '.' + safeExt;
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Caricamento in corso...';
+        }
 
         try {
             const sb = window.supabaseClient;
+            if (!sb) throw new Error('Connessione a Supabase non disponibile.');
+
+            const { data: sessionData } = await sb.auth.getSession();
+            if (!sessionData?.session) {
+                throw new Error('Sessione scaduta. Effettua nuovamente il login.');
+            }
 
             const { error: uploadErr } = await sb.storage
                 .from('certificates')
-                .upload(filePath, file, { upsert: true });
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    contentType: file.type,
+                    upsert: false
+                });
 
-            if (uploadErr) throw uploadErr;
+            if (uploadErr) {
+                console.error('Errore Storage certificato:', uploadErr);
+                throw new Error(
+                    uploadErr.message ||
+                    'Upload non riuscito. Verifica che il bucket "certificates" e le relative policy siano configurati in Supabase.'
+                );
+            }
 
-            const { data: urlData } = sb.storage
-                .from('certificates')
-                .getPublicUrl(filePath);
-
-            const publicUrl = urlData.publicUrl;
-
+            // Il bucket resta privato: salviamo il path, non un URL pubblico.
             const { error: updateErr } = await sb
                 .from('profiles')
                 .update({
-                    medical_certificate_url: publicUrl,
+                    medical_certificate_url: filePath,
                     medical_certificate_expiration: expInput.value
                 })
                 .eq('id', user.id);
 
-            if (updateErr) throw updateErr;
+            if (updateErr) {
+                // Evita di lasciare un file orfano se l'aggiornamento del profilo fallisce.
+                await sb.storage.from('certificates').remove([filePath]);
+                throw updateErr;
+            }
 
-            await createNotification(user.id, 'Certificato Caricato', 'Il tuo certificato medico è stato inviato correttamente.', 'success');
+            try {
+                await createNotification(
+                    user.id,
+                    'Certificato Caricato',
+                    'Il tuo certificato medico è stato inviato correttamente.',
+                    'success'
+                );
+            } catch (notificationError) {
+                console.warn('Certificato caricato, ma notifica non inviata:', notificationError);
+            }
 
             alert("Certificato medico caricato con successo!");
-            location.reload();
+            window.location.reload();
         } catch (err) {
             console.error("Errore upload certificato:", err);
-            alert("Errore durante il caricamento: " + err.message);
+            alert("Errore durante il caricamento: " + (err.message || err));
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Carica Certificato Medico`;
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Carica Certificato Medico';
+            }
         }
-    };
+    });
 }
-
