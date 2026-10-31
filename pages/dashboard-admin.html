@@ -167,6 +167,21 @@
             </div>
         </div>
 
+        <!-- PRESENZE MENSILI E CONTABILITA -->
+        <section class="glass-panel p-6 rounded-3xl space-y-4 border-l-4 border-l-brand-pink">
+          <div class="flex flex-wrap justify-between items-center gap-3 border-b border-brand-border pb-4">
+            <div><h3 class="text-lg font-black uppercase text-white"><i class="fa-solid fa-file-invoice-dollar text-brand-pink mr-2"></i>Presenze e contabilità</h3>
+            <p class="text-xs text-gray-400 mt-1">Tabulato mensile, quote e stato dei pagamenti.</p></div>
+            <div class="flex flex-wrap gap-2 items-center">
+              <input id="finance-month" type="month" class="bg-brand-dark border border-brand-border rounded-xl px-3 py-2 text-xs text-white">
+              <button id="btn-finance-refresh" class="px-3 py-2 bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan rounded-xl text-xs font-bold">Aggiorna</button>
+              <button id="btn-finance-export" class="px-3 py-2 btn-gradient text-black rounded-xl text-xs font-black"><i class="fa-solid fa-file-csv mr-1"></i>Esporta CSV</button>
+            </div>
+          </div>
+          <div id="finance-totals" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+          <div id="finance-content"><p class="text-xs text-gray-500">Caricamento...</p></div>
+        </section>
+
         <!-- CHAT COMMUNITY & PRIVATA -->
         <div class="glass-panel p-6 rounded-3xl space-y-4">
             <div class="flex justify-between items-center border-b border-brand-border pb-3">
@@ -470,6 +485,7 @@
     <script src="../js/playlists.js"></script>
     <script src="../js/admin.js"></script>
     <script src="../js/attendance.js"></script>
+    <script src="../js/finance.js"></script>
     <script src="../js/events.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
