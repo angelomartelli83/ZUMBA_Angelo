@@ -27,11 +27,9 @@ create table if not exists public.attendance_payment_records (
 );
 
 create unique index if not exists attendance_payment_month_unique
-  on public.attendance_payment_records(user_id,billing_month)
-  where payment_scope = 'monthly';
+  on public.attendance_payment_records(user_id,billing_month);
 create unique index if not exists attendance_payment_lesson_unique
-  on public.attendance_payment_records(user_id,lesson_id)
-  where payment_scope = 'lesson';
+  on public.attendance_payment_records(user_id,lesson_id);
 create index if not exists attendance_payment_month_idx
   on public.attendance_payment_records(billing_month);
 
