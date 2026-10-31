@@ -374,14 +374,27 @@ async function handleUpdateLesson(e) {
 }
 
 window.downloadCert = async function(path) {
-    const sb = getSupabase();
-    const { data, error } = await sb.storage.from('certificates').createSignedUrl(path, 60);
-    if (error) {
-        alert("Errore nel download del certificato: " + error.message);
-        return;
-    }
-    if (data && data.signedUrl) {
-        window.open(data.signedUrl, '_blank');
+    // Apri la scheda in modo sincrono: window.open dopo await viene spesso bloccato.
+    const tab = window.open('about:blank', '_blank');
+    try {
+        const sb = getSupabase();
+        if (!sb) throw new Error('Connessione a Supabase non disponibile.');
+        if (/^https?:\\/\\//i.test(path)) {
+            if (tab) tab.location.href = path;
+            else window.location.href = path;
+            return;
+        }
+        const cleanPath = String(path || '').replace(/^\\/+/, '');
+        if (!cleanPath || cleanPath.includes('..')) throw new Error('Percorso del certificato non valido.');
+        const { data, error } = await sb.storage.from('certificates').createSignedUrl(cleanPath, 60);
+        if (error) throw error;
+        if (!data?.signedUrl) throw new Error('Link temporaneo non disponibile.');
+        if (tab) tab.location.href = data.signedUrl;
+        else window.location.href = data.signedUrl;
+    } catch (err) {
+        if (tab) tab.close();
+        console.error('Errore apertura certificato:', err);
+        alert('Non riesco ad aprire il certificato: ' + (err.message || err));
     }
 };
 
