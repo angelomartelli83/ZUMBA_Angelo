@@ -25,16 +25,24 @@
     const start = monthStart(month);
     const endDate = new Date(Number(month.slice(0,4)),Number(month.slice(5,7)),1);
     const end = endDate.getFullYear()+'-'+String(endDate.getMonth()+1).padStart(2,'0')+'-'+String(endDate.getDate()).padStart(2,'0');
-    const [p,l,a,s,pay] = await Promise.all([
+    const [p,l,s,pay] = await Promise.all([
       sb.from('profiles').select('id,nome,cognome').eq('is_admin',false).order('nome'),
       sb.from('lessons').select('id,title,datetime').gte('datetime',start+'T00:00:00').lt('datetime',end+'T00:00:00').order('datetime'),
-      sb.from('attendance_records').select('id,lesson_id,user_id,guest_name,status'),
       sb.from('student_payment_settings').select('*'),
       sb.from('attendance_payment_records').select('*').eq('billing_month',start)
     ]);
-    const failed=[p,l,a,s,pay].find(x=>x.error);
+    const failed=[p,l,s,pay].find(x=>x.error);
     if(failed){ $('finance-content').innerHTML='<p class="text-sm text-brand-pink">Errore: '+esc(failed.error.message)+'. Verifica di aver eseguito supabase_finance.sql.</p>'; return; }
-    data={profiles:p.data||[],lessons:l.data||[],attendance:a.data||[],settings:{},payments:pay.data||[]};
+
+    // Usa la tabella attendance_records già gestita dalla scheda della lezione singola.
+    const lessonIds=(l.data||[]).map(x=>x.id);
+    let attendanceRows=[];
+    if(lessonIds.length){
+      const attendanceResult=await sb.from('attendance_records').select('id,lesson_id,user_id,guest_name,status,checked_at').in('lesson_id',lessonIds);
+      if(attendanceResult.error){ $('finance-content').innerHTML='<p class="text-sm text-brand-pink">Errore nel recupero delle presenze: '+esc(attendanceResult.error.message)+'</p>'; return; }
+      attendanceRows=attendanceResult.data||[];
+    }
+    data={profiles:p.data||[],lessons:l.data||[],attendance:attendanceRows,settings:{},payments:pay.data||[]};
     (s.data||[]).forEach(x=>data.settings[x.user_id]=x);
     render();
   }
