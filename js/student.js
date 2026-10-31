@@ -269,11 +269,25 @@ function initCertUploadForm(user) {
         }
 
         const file = fileInput.files[0];
-        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
         const maxSize = 10 * 1024 * 1024;
+        const safeExt = (file.name.split('.').pop() || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const mimeByExtension = {
+            pdf: 'application/pdf',
+            jpg: 'image/jpeg',
+            jpeg: 'image/jpeg',
+            png: 'image/png',
+            webp: 'image/webp',
+            heic: 'image/heic',
+            heif: 'image/heif'
+        };
+        const acceptedExtensions = Object.keys(mimeByExtension);
+        const contentType = file.type || mimeByExtension[safeExt] || 'application/octet-stream';
 
-        if (!allowedTypes.includes(file.type)) {
-            alert("Formato non supportato. Carica un PDF, JPG, PNG o WEBP.");
+        // Su alcuni telefoni (in particolare iPhone) il browser può fornire
+        // un MIME vuoto o image/heic: validiamo anche l'estensione del file.
+        if (!acceptedExtensions.includes(safeExt) ||
+            (file.type && !['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'application/octet-stream'].includes(file.type))) {
+            alert("Formato non supportato. Carica un PDF, JPG, PNG, WEBP o HEIC.");
             return;
         }
 
@@ -282,7 +296,6 @@ function initCertUploadForm(user) {
             return;
         }
 
-        const safeExt = (file.name.split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '');
         const filePath = user.id + '/certificato_' + Date.now() + '.' + safeExt;
 
         if (btn) {
@@ -303,7 +316,7 @@ function initCertUploadForm(user) {
                 .from('certificates')
                 .upload(filePath, file, {
                     cacheControl: '3600',
-                    contentType: file.type,
+                    contentType,
                     upsert: false
                 });
 
