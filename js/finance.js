@@ -28,7 +28,7 @@
     const [p,l,a,s,pay] = await Promise.all([
       sb.from('profiles').select('id,nome,cognome').eq('is_admin',false).order('nome'),
       sb.from('lessons').select('id,title,datetime').gte('datetime',start+'T00:00:00').lt('datetime',end+'T00:00:00').order('datetime'),
-      sb.from('attendance_records').select('id,lesson_id,user_id,guest_name,status').gte('checked_at',start+'T00:00:00').lt('checked_at',end+'T00:00:00'),
+      sb.from('attendance_records').select('id,lesson_id,user_id,guest_name,status'),
       sb.from('student_payment_settings').select('*'),
       sb.from('attendance_payment_records').select('*').eq('billing_month',start)
     ]);
@@ -51,7 +51,7 @@
       return sum+present.filter(a=>a.user_id===p.id).length*Number(st.lesson_fee||0);
     },0);
     const paid=data.payments.filter(x=>x.paid).reduce((sum,x)=>sum+Number(x.amount||0),0);
-    const due=data.payments.filter(x=>!x.paid).reduce((sum,x)=>sum+Number(x.amount||0),0);
+    const due=Math.max(0,expected-paid);
     $('finance-totals').innerHTML=[
       ['Incasso previsto',euro(expected)],['Incassato',euro(paid)],['Da riscuotere',euro(due)]
     ].map(([label,value])=>'<div class="bg-brand-dark border border-brand-border rounded-xl p-3"><div class="text-[10px] uppercase text-gray-400 font-bold">'+label+'</div><div class="text-xl font-black text-white mt-1">'+value+'</div></div>').join('');
